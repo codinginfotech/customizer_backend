@@ -9,7 +9,9 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.json",
+    "build:shared": "tsc -p shared/tsconfig.json",
+    "postinstall": "npm run build:shared",
+    "build": "npm run build:shared && tsc -p tsconfig.json",
     "start": "node dist/src/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -20,7 +22,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.637.0",
-    "@cpd/shared": "1.0.0",
+    "@cpd/shared": "file:shared",
     "@prisma/client": "^5.19.1",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
