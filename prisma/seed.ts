@@ -6,20 +6,55 @@ const prisma = new PrismaClient();
 
 const J = (v: unknown) => v as Prisma.InputJsonValue;
 
+/**
+ * The well-known README logins are only ever seeded into a database on this
+ * machine (or the docker-compose "mysql" service) — never into a hosted one,
+ * whatever NODE_ENV says.
+ */
+function isLocalDatabase(): boolean {
+  try {
+    const host = new URL(process.env.DATABASE_URL ?? '').hostname;
+    return ['localhost', '127.0.0.1', '[::1]', 'mysql'].includes(host);
+  } catch {
+    return false;
+  }
+}
+const useDevDefaults = process.env.NODE_ENV !== 'production' && isLocalDatabase();
+
+/**
+ * Accounts. The admin comes from SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD (the
+ * password is re-applied on every seed, so rotate it by changing the env and
+ * redeploying). Local development falls back to the README logins and also
+ * gets a demo user.
+ */
 async function seedUsers() {
-  const adminHash = await bcrypt.hash('Admin123!', 12);
-  const demoHash = await bcrypt.hash('Demo1234', 12);
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || (useDevDefaults ? 'admin@customizer.dev' : '');
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD || (useDevDefaults ? 'Admin123!' : '');
+
+  if (!adminEmail || !adminPassword) {
+    console.log('· Users skipped — set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD to create the admin');
+    return;
+  }
+
+  const adminHash = await bcrypt.hash(adminPassword, 12);
   await prisma.user.upsert({
-    where: { email: 'admin@customizer.dev' },
-    update: {},
+    where: { email: adminEmail },
+    update: { passwordHash: adminHash, role: 'ADMIN', status: 'ACTIVE' },
     create: {
       name: 'Platform Admin',
-      email: 'admin@customizer.dev',
+      email: adminEmail,
       passwordHash: adminHash,
       role: 'ADMIN',
       emailVerified: true,
     },
   });
+
+  if (!useDevDefaults) {
+    console.log(`✓ Users (admin: ${adminEmail})`);
+    return;
+  }
+
+  const demoHash = await bcrypt.hash('Demo1234', 12);
   await prisma.user.upsert({
     where: { email: 'demo@customizer.dev' },
     update: {},
@@ -31,7 +66,7 @@ async function seedUsers() {
       emailVerified: true,
     },
   });
-  console.log('✓ Users (admin@customizer.dev / Admin123!, demo@customizer.dev / Demo1234)');
+  console.log(`✓ Users (${adminEmail} / ${adminPassword}, demo@customizer.dev / Demo1234)`);
 }
 
 async function seedCategories() {
@@ -787,7 +822,10 @@ async function seedTemplates() {
       ] },
     },
   ];
+  // Idempotent: the seed runs on every container start.
   for (const t of templates) {
+    const existing = await prisma.designTemplate.findFirst({ where: { name: t.name } });
+    if (existing) continue;
     await prisma.designTemplate.create({
       data: { name: t.name, category: t.category, templateJson: J(t.templateJson), status: 'ACTIVE' },
     });
