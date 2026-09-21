@@ -12,6 +12,7 @@ import { orderRoutes } from '../modules/orders/order.routes';
 import { exportRoutes } from '../modules/export/export.routes';
 import { adminRoutes } from '../modules/admin/admin.routes';
 import { platformRoutes } from '../modules/platform/platform.routes';
+import { shopifyRoutes } from '../modules/shopify/shopify.routes';
 import { designService } from '../modules/designs/design.service';
 import { catchAsync } from '../utils/catchAsync';
 import { ok } from '../utils/respond';
@@ -31,6 +32,7 @@ apiRouter.use('/orders', orderRoutes);
 apiRouter.use('/export', exportRoutes);
 apiRouter.use('/admin', adminRoutes);
 apiRouter.use('/platform', platformRoutes);
+apiRouter.use('/shopify', shopifyRoutes);
 
 /** Public, unauthenticated read of an explicitly shared design. */
 apiRouter.get(

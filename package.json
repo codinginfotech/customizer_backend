@@ -24,6 +24,7 @@
     "@aws-sdk/client-s3": "^3.637.0",
     "@cpd/shared": "file:shared",
     "@prisma/client": "^5.19.1",
+    "@shopify/shopify-api": "^15.0.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

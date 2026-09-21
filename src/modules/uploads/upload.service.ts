@@ -32,7 +32,12 @@ function sanitizeSvg(svg: string): string {
 }
 
 export class UploadService {
-  async processDesignAsset(userId: number, file: Express.Multer.File): Promise<ProcessedUpload> {
+  /**
+   * Validate, sanitize and re-encode a design image (raster or SVG) and
+   * persist it under `keyPrefix`. Shared by account uploads and Shopify
+   * storefront (guest) uploads — the bytes stored are never the original file.
+   */
+  async processImageFile(file: Express.Multer.File, keyPrefix: string) {
     const ext = path.extname(file.originalname).toLowerCase();
     const id = crypto.randomUUID();
 
@@ -44,10 +49,10 @@ export class UploadService {
     if (ext === '.svg') {
       const raw = file.buffer.toString('utf8');
       if (raw.length > 2_000_000) throw ApiError.badRequest('SVG is too large', 'FILE_TOO_LARGE');
-      if (!/<svg[\s>]/i.test(raw)) throw ApiError.badRequest('Not a valid SVG file', 'INVALID_SVG');
+      if (!/<svg[s>]/i.test(raw)) throw ApiError.badRequest('Not a valid SVG file', 'INVALID_SVG');
       buffer = Buffer.from(sanitizeSvg(raw), 'utf8');
       contentType = 'image/svg+xml';
-      key = `assets/${userId}/${id}.svg`;
+      key = `${keyPrefix}/${id}.svg`;
       try {
         const probe = await sharp(buffer).metadata();
         metadata = {
@@ -77,11 +82,11 @@ export class UploadService {
       if (hasAlpha) {
         buffer = await image.png().toBuffer();
         contentType = 'image/png';
-        key = `assets/${userId}/${id}.png`;
+        key = `${keyPrefix}/${id}.png`;
       } else {
         buffer = await image.jpeg({ quality: 92, mozjpeg: true }).toBuffer();
         contentType = 'image/jpeg';
-        key = `assets/${userId}/${id}.jpg`;
+        key = `${keyPrefix}/${id}.jpg`;
       }
       const finalProbe = await sharp(buffer).metadata();
       metadata = {
@@ -93,17 +98,22 @@ export class UploadService {
     }
 
     const stored = await storage.save(key, buffer, contentType);
+    return { fileUrl: stored.url, contentType, fileSize: buffer.length, metadata };
+  }
+
+  async processDesignAsset(userId: number, file: Express.Multer.File): Promise<ProcessedUpload> {
+    const processed = await this.processImageFile(file, `assets/${userId}`);
     const record = await prisma.uploadedAsset.create({
       data: {
         userId,
         fileName: file.originalname.slice(0, 255),
-        fileUrl: stored.url,
-        fileType: contentType,
-        fileSize: buffer.length,
-        metadata: metadata ?? undefined,
+        fileUrl: processed.fileUrl,
+        fileType: processed.contentType,
+        fileSize: processed.fileSize,
+        metadata: processed.metadata ?? undefined,
       },
     });
-    logger.info('upload.stored', { userId, assetId: record.id, bytes: buffer.length });
+    logger.info('upload.stored', { userId, assetId: record.id, bytes: processed.fileSize });
 
     return {
       id: record.id,
@@ -111,7 +121,7 @@ export class UploadService {
       fileUrl: record.fileUrl,
       fileType: record.fileType,
       fileSize: record.fileSize,
-      metadata,
+      metadata: processed.metadata,
     };
   }
 

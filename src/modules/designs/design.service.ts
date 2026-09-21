@@ -13,7 +13,7 @@ type CreateInput = z.infer<typeof createDesignSchema>;
 type UpdateInput = z.infer<typeof updateDesignSchema>;
 
 /** Decode a data-URL preview, normalize it with Sharp, persist to storage. */
-async function storePreview(dataUrl: string): Promise<string> {
+export async function storePreview(dataUrl: string): Promise<string> {
   const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
   const buffer = Buffer.from(base64, 'base64');
   // Re-encode through Sharp: caps dimensions and strips anything malicious.

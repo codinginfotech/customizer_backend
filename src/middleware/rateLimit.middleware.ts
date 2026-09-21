@@ -14,6 +14,19 @@ export const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: failureResponse,
+  // Shopify app-proxy traffic arrives from Shopify's own egress IPs on behalf
+  // of every shopper, so it gets its own per-store limiter instead.
+  skip: (req) => req.originalUrl.startsWith('/api/shopify/proxy'),
+});
+
+/** App-proxy limiter keyed by store rather than client IP. */
+export const shopifyProxyLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: isTest ? 10_000 : 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: failureResponse,
+  keyGenerator: (req) => String(req.query.shop || req.ip),
 });
 
 /** Strict limiter for credential endpoints (login, register, password reset). */

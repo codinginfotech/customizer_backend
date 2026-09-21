@@ -34,6 +34,18 @@ const envSchema = z.object({
   FREE_SHIPPING_THRESHOLD: z.coerce.number().default(75),
 
   MAX_UPLOAD_MB: z.coerce.number().default(15),
+
+  // Shopify app (optional — the whole /api/shopify surface is disabled when
+  // SHOPIFY_API_KEY / SHOPIFY_API_SECRET are blank).
+  SHOPIFY_API_KEY: z.string().optional(),
+  SHOPIFY_API_SECRET: z.string().optional(),
+  // Public URL the app is reachable at (the frontend origin — /api is proxied).
+  SHOPIFY_APP_URL: z.string().url().optional(),
+  SHOPIFY_SCOPES: z.string().default('read_products,read_orders'),
+  SHOPIFY_API_VERSION: z.string().default('2026-04'),
+  // Optional dedicated key for encrypting shop access tokens at rest (32+ chars).
+  // Falls back to a key derived from SHOPIFY_API_SECRET.
+  SHOPIFY_TOKEN_ENCRYPTION_KEY: z.string().min(32).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -8,6 +8,7 @@ import { apiLimiter } from './middleware/rateLimit.middleware';
 import { requestLogger } from './middleware/requestLogger.middleware';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { UPLOAD_ROOT } from './storage';
+import { shopifyWebhookRoutes } from './modules/shopify/shopify.webhooks';
 
 export function createApp() {
   const app = express();
@@ -28,6 +29,9 @@ export function createApp() {
     }),
   );
   app.use(cookieParser());
+  // Shopify webhooks are HMAC-signed over the raw bytes, so they must be
+  // read before the JSON parser touches the body.
+  app.use('/api/shopify/webhooks', shopifyWebhookRoutes);
   // Design JSON + base64 previews can be sizable; still capped.
   app.use(express.json({ limit: '8mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
