@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import type { ShopifyShop } from '@prisma/client';
-import { InvalidJwtError, RequestedTokenType } from '@shopify/shopify-api';
+import { InvalidJwtError } from '@shopify/shopify-api';
 import { catchAsync } from '../../utils/catchAsync';
 import { ApiError } from '../../utils/apiError';
 import { env } from '../../config/env';
@@ -68,15 +68,9 @@ export async function requireShopifySession(req: Request, _res: Response, next: 
     }
     const shopDomain = shopify.utils.sanitizeShop(new URL(payload.dest).hostname, true)!;
 
-    let shop = await shopService.findByDomain(shopDomain);
-    if (!shop || !shop.accessToken || shop.uninstalledAt) {
-      const { session } = await shopify.auth.tokenExchange({
-        shop: shopDomain,
-        sessionToken: token,
-        requestedTokenType: RequestedTokenType.OfflineAccessToken,
-      });
-      shop = await shopService.install(session);
-    }
+    // First load (or a dead credential): exchange the session token for an
+    // offline token — serialised per shop, see shop.service.
+    const shop = await shopService.ensureInstalledViaTokenExchange(shopDomain, token);
     req.shopify = { shop };
     next();
   } catch (err) {
@@ -128,7 +122,9 @@ shopifyAuthRoutes.get(
   '/callback',
   catchAsync(async (req, res) => {
     const shopify = getShopify();
-    const { session } = await shopify.auth.callback({ rawRequest: req, rawResponse: res });
+    // Public apps only get expiring offline tokens; ask for one explicitly so
+    // the response carries the refresh token we store.
+    const { session } = await shopify.auth.callback({ rawRequest: req, rawResponse: res, expiring: true });
     await shopService.install(session);
     const host = typeof req.query.host === 'string' ? req.query.host : undefined;
     res.redirect(shopifyAdminAppUrl(session.shop, host));

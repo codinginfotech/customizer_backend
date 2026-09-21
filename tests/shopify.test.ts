@@ -228,3 +228,34 @@ describe('oauth + app proxy', () => {
     expect(res.body.data.settings.buttonLabel).toBe('Customize this product');
   });
 });
+
+describe('withShopLock', () => {
+  it('runs work for the same shop one at a time, in order', async () => {
+    const { withShopLock } = await import('../src/modules/shopify/shopify.locks');
+    const log: string[] = [];
+    const job = (name: string, ms: number) => () =>
+      new Promise<string>((resolve) =>
+        setTimeout(() => {
+          log.push(name);
+          resolve(name);
+        }, ms),
+      );
+    // Three "parallel" token exchanges for one shop: the slow first one must
+    // finish before the others start; another shop is not blocked.
+    const results = await Promise.all([
+      withShopLock('a.myshopify.com', job('a1', 30)),
+      withShopLock('a.myshopify.com', job('a2', 1)),
+      withShopLock('b.myshopify.com', job('b1', 1)),
+      withShopLock('a.myshopify.com', job('a3', 1)),
+    ]);
+    expect(results).toEqual(['a1', 'a2', 'b1', 'a3']);
+    expect(log.indexOf('b1')).toBeLessThan(log.indexOf('a1'));
+    expect(log.filter((n) => n.startsWith('a'))).toEqual(['a1', 'a2', 'a3']);
+  });
+
+  it('keeps serving the shop after a failed critical section', async () => {
+    const { withShopLock } = await import('../src/modules/shopify/shopify.locks');
+    await expect(withShopLock('c.myshopify.com', async () => { throw new Error('boom'); })).rejects.toThrow('boom');
+    await expect(withShopLock('c.myshopify.com', async () => 'ok')).resolves.toBe('ok');
+  });
+});

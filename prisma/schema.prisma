@@ -411,20 +411,25 @@ enum ShopifyCustomizationStatus {
 /// One installed Shopify store. The offline access token is encrypted at
 /// rest (AES-256-GCM, see modules/shopify/shopify.crypto.ts).
 model ShopifyShop {
-  id            Int       @id @default(autoincrement())
-  shopDomain    String    @unique @db.VarChar(255)
-  accessToken   String?   @db.VarChar(1024)
-  scope         String?   @db.VarChar(1000)
-  name          String?   @db.VarChar(255)
-  email         String?   @db.VarChar(255)
-  currency      String?   @db.VarChar(10)
-  primaryDomain String?   @db.VarChar(255)
+  id                    Int       @id @default(autoincrement())
+  shopDomain            String    @unique @db.VarChar(255)
+  accessToken           String?   @db.VarChar(1024)
+  /// Public apps receive expiring offline tokens: refresh before this passes.
+  accessTokenExpiresAt  DateTime?
+  /// Encrypted like accessToken; null for non-expiring tokens.
+  refreshToken          String?   @db.VarChar(1024)
+  refreshTokenExpiresAt DateTime?
+  scope                 String?   @db.VarChar(1000)
+  name                  String?   @db.VarChar(255)
+  email                 String?   @db.VarChar(255)
+  currency              String?   @db.VarChar(10)
+  primaryDomain         String?   @db.VarChar(255)
   /// JSON ShopifySettings (button label, launch mode, …)
-  settings      Json?
-  installedAt   DateTime  @default(now())
-  uninstalledAt DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  settings              Json?
+  installedAt           DateTime  @default(now())
+  uninstalledAt         DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   mappings       ShopifyProductMapping[]
   customizations ShopifyCustomization[]
