@@ -1,0 +1,36 @@
+{
+  "transform": {
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.72,
+    "autoCenter": true
+  },
+  "size": [
+    1.3,
+    0.669,
+    1.051
+  ],
+  "meshBindings": [
+    {
+      "mesh": "zone_front",
+      "areaKey": "front",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_top",
+      "areaKey": "top",
+      "mode": "overlay"
+    }
+  ],
+  "colorMeshes": [
+    "CardboardBox_LP_lambert1_0"
+  ],
+  "materials": {
+    "CardboardBox_LP_lambert1_0": "cotton"
+  },
+  "preserveMaterials": true,
+  "decalZones": {}
+}

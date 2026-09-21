@@ -1,0 +1,55 @@
+{
+  "transform": {
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 0.1865,
+    "autoCenter": true
+  },
+  "size": [
+    1.299,
+    0.81,
+    0.438
+  ],
+  "meshBindings": [
+    {
+      "mesh": "zone_front",
+      "areaKey": "front",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_back",
+      "areaKey": "back",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_left_sleeve",
+      "areaKey": "left_sleeve",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_right_sleeve",
+      "areaKey": "right_sleeve",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_pocket",
+      "areaKey": "pocket",
+      "mode": "overlay"
+    }
+  ],
+  "colorMeshes": [
+    "Object_4",
+    "Object_5",
+    "Object_6"
+  ],
+  "materials": {
+    "Object_4": "cotton",
+    "Object_5": "cotton",
+    "Object_6": "cotton"
+  },
+  "preserveMaterials": true,
+  "decalZones": {}
+}

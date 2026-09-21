@@ -1,0 +1,78 @@
+{
+  "transform": {
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 0.00167,
+    "autoCenter": true
+  },
+  "size": [
+    1.178,
+    1.15,
+    0.494
+  ],
+  "meshBindings": [
+    {
+      "mesh": "zone_front",
+      "areaKey": "front",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_back",
+      "areaKey": "back",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_left_sleeve",
+      "areaKey": "left_sleeve",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_right_sleeve",
+      "areaKey": "right_sleeve",
+      "mode": "overlay"
+    }
+  ],
+  "colorMeshes": [
+    "Object_2",
+    "Object_3",
+    "Object_4",
+    "Object_5",
+    "Object_6",
+    "Object_7",
+    "Object_8",
+    "Object_9",
+    "Object_10",
+    "Object_11",
+    "Object_12",
+    "Object_13",
+    "Object_14",
+    "Object_15",
+    "Object_16",
+    "Object_17",
+    "Object_18"
+  ],
+  "materials": {
+    "Object_2": "cotton",
+    "Object_3": "cotton",
+    "Object_4": "cotton",
+    "Object_5": "cotton",
+    "Object_6": "cotton",
+    "Object_7": "cotton",
+    "Object_8": "cotton",
+    "Object_9": "cotton",
+    "Object_10": "cotton",
+    "Object_11": "cotton",
+    "Object_12": "cotton",
+    "Object_13": "cotton",
+    "Object_14": "cotton",
+    "Object_15": "cotton",
+    "Object_16": "cotton",
+    "Object_17": "cotton",
+    "Object_18": "cotton"
+  },
+  "preserveMaterials": true,
+  "decalZones": {}
+}

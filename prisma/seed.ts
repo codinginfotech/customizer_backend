@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import fs from 'node:fs';
+import path from 'node:path';
 import { PrismaClient, Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
@@ -154,8 +156,21 @@ function standardViews(overrides: Record<string, { azimuth: number; polar?: numb
   };
 }
 
+/**
+ * The rig sidecars written by `apply-rig.ts`, keyed by slug.
+ *
+ * Mesh names, the axis/scale correction and which meshes take the variant
+ * colour are all properties of the actual GLB, derived by the auto-rigger — so
+ * where a rig exists it overrides the hand-written defaults below rather than
+ * anyone re-typing mesh names into this file.
+ */
+function rigFor(slug: string): Record<string, unknown> | null {
+  const file = path.join(__dirname, 'rigs', `${slug}.rig.json`);
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+}
+
 function modelConfig(p: ProductSeed) {
-  return {
+  const base = {
     type: 'GLTF',
     meshBindings: Object.entries(p.model.zones).map(([areaKey, mode]) => ({
       mesh: `zone_${areaKey}`,
@@ -172,6 +187,7 @@ function modelConfig(p: ProductSeed) {
     metalness: 0.05,
     roughness: 0.85,
   };
+  return { ...base, ...(rigFor(p.slug) ?? {}) };
 }
 
 function apparelVariants(prefix: string, colors: Array<[string, string]>, sizes: string[]) {
@@ -202,6 +218,117 @@ const APPAREL_COLORS: Array<[string, string]> = [
 
 const PRODUCTS: ProductSeed[] = [
   {
+    slug: 'womens-basic-tshirt',
+    name: "Women's Basic T-Shirt",
+    categorySlug: 'apparel',
+    description:
+      'A slim-fit 160 GSM ringspun tee cut for a shorter body and narrower shoulder. Four print zones, previewed on a scanned garment.',
+    basePrice: 16.99,
+    featured: true,
+    image: '/images/products/womens-tshirt.svg',
+    tags: ['popular', 'customizable'],
+    metadata: { material: '100% ringspun cotton, 160 GSM', careInstructions: 'Machine wash cold, tumble dry low', weightGrams: 160, shippingClass: 'standard' },
+    printMethods: ['dtg', 'dtf', 'screen_print'],
+    areas: [
+      { key: 'front', name: 'Front', width: 420, height: 520, safeArea: { x: 38, y: 47, width: 344, height: 426 }, physicalWidthIn: 11, physicalHeightIn: 13.6, mockup: { left: 32, top: 26, width: 36, height: 44 }, templateImage: '/images/products/womens-tshirt.svg', sortOrder: 0 },
+      { key: 'back', name: 'Back', width: 420, height: 520, safeArea: { x: 38, y: 47, width: 344, height: 426 }, physicalWidthIn: 11, physicalHeightIn: 13.6, mockup: { left: 32, top: 24, width: 36, height: 44 }, templateImage: '/images/products/womens-tshirt-back.svg', sortOrder: 1 },
+      { key: 'left_sleeve', name: 'Left Sleeve', width: 200, height: 220, safeArea: { x: 20, y: 20, width: 160, height: 180 }, physicalWidthIn: 3.6, physicalHeightIn: 4, mockup: { left: 9, top: 30, width: 14, height: 15, rotate: -12 }, templateImage: '/images/products/womens-tshirt.svg', sortOrder: 2 },
+      { key: 'right_sleeve', name: 'Right Sleeve', width: 200, height: 220, safeArea: { x: 20, y: 20, width: 160, height: 180 }, physicalWidthIn: 3.6, physicalHeightIn: 4, mockup: { left: 78, top: 30, width: 14, height: 15, rotate: 12 }, templateImage: '/images/products/womens-tshirt.svg', sortOrder: 3 },
+    ],
+    variants: apparelVariants('WTS', APPAREL_COLORS, SIZES),
+    model: {
+      modelUrl: '/models/womens-basic-tshirt.glb',
+      zones: { front: 'overlay', back: 'overlay', left_sleeve: 'overlay', right_sleeve: 'overlay' },
+      colorMeshes: [],
+      cameraDistance: 2.4,
+      views: { default: { azimuth: 22, polar: 80 } },
+    },
+  },
+  {
+    slug: 'polo-shirt',
+    name: 'Pique Polo Shirt',
+    categorySlug: 'apparel',
+    description:
+      'Classic three-button pique polo with a ribbed collar and side vents. Ideal for staff uniforms and club kit.',
+    basePrice: 24.99,
+    featured: false,
+    image: '/images/products/polo.svg',
+    tags: ['customizable'],
+    metadata: { material: '100% cotton pique, 220 GSM', careInstructions: 'Machine wash warm', weightGrams: 240, shippingClass: 'standard' },
+    printMethods: ['embroidery', 'dtf', 'screen_print'],
+    areas: [
+      { key: 'front', name: 'Front', width: 420, height: 480, safeArea: { x: 38, y: 44, width: 344, height: 393 }, physicalWidthIn: 11, physicalHeightIn: 12.6, mockup: { left: 32, top: 28, width: 36, height: 40 }, templateImage: '/images/products/polo.svg', sortOrder: 0 },
+      { key: 'back', name: 'Back', width: 420, height: 520, safeArea: { x: 38, y: 47, width: 344, height: 426 }, physicalWidthIn: 11, physicalHeightIn: 13.6, mockup: { left: 32, top: 25, width: 36, height: 44 }, templateImage: '/images/products/polo-back.svg', sortOrder: 1 },
+      { key: 'left_sleeve', name: 'Left Sleeve', width: 200, height: 220, safeArea: { x: 20, y: 20, width: 160, height: 180 }, physicalWidthIn: 4, physicalHeightIn: 4.4, mockup: { left: 8, top: 32, width: 15, height: 16, rotate: -10 }, templateImage: '/images/products/polo.svg', sortOrder: 2 },
+      { key: 'right_sleeve', name: 'Right Sleeve', width: 200, height: 220, safeArea: { x: 20, y: 20, width: 160, height: 180 }, physicalWidthIn: 4, physicalHeightIn: 4.4, mockup: { left: 77, top: 32, width: 15, height: 16, rotate: 10 }, templateImage: '/images/products/polo.svg', sortOrder: 3 },
+    ],
+    variants: apparelVariants('POL', [['#f4f4f2', 'White'], ['#23252a', 'Black'], ['#24405f', 'Navy'], ['#1d5c40', 'Forest']], SIZES),
+    model: {
+      modelUrl: '/models/polo-shirt.glb',
+      zones: { front: 'overlay', back: 'overlay', left_sleeve: 'overlay', right_sleeve: 'overlay' },
+      colorMeshes: [],
+      cameraDistance: 2.4,
+      views: { default: { azimuth: 22, polar: 80 } },
+    },
+  },
+  {
+    slug: 'oxford-button-shirt',
+    name: 'Oxford Button-Down Shirt',
+    categorySlug: 'apparel',
+    description:
+      'Woven oxford shirt with a button-down collar and a clean placket. Embroider the chest or print the full back panel.',
+    basePrice: 32.99,
+    featured: false,
+    image: '/images/products/button-shirt.svg',
+    tags: ['new', 'customizable'],
+    metadata: { material: 'Oxford cotton weave, 140 GSM', careInstructions: 'Machine wash warm, warm iron', weightGrams: 280, shippingClass: 'standard' },
+    printMethods: ['embroidery', 'dtf'],
+    areas: [
+      { key: 'front', name: 'Front', width: 420, height: 500, safeArea: { x: 38, y: 45, width: 344, height: 410 }, physicalWidthIn: 11, physicalHeightIn: 13.1, mockup: { left: 32, top: 27, width: 36, height: 42 }, templateImage: '/images/products/button-shirt.svg', sortOrder: 0 },
+      { key: 'back', name: 'Back', width: 420, height: 520, safeArea: { x: 38, y: 47, width: 344, height: 426 }, physicalWidthIn: 11, physicalHeightIn: 13.6, mockup: { left: 32, top: 25, width: 36, height: 44 }, templateImage: '/images/products/button-shirt-back.svg', sortOrder: 1 },
+      { key: 'left_sleeve', name: 'Left Sleeve', width: 200, height: 220, safeArea: { x: 20, y: 20, width: 160, height: 180 }, physicalWidthIn: 4, physicalHeightIn: 4.4, mockup: { left: 8, top: 32, width: 15, height: 16, rotate: -10 }, templateImage: '/images/products/button-shirt.svg', sortOrder: 2 },
+      { key: 'right_sleeve', name: 'Right Sleeve', width: 200, height: 220, safeArea: { x: 20, y: 20, width: 160, height: 180 }, physicalWidthIn: 4, physicalHeightIn: 4.4, mockup: { left: 77, top: 32, width: 15, height: 16, rotate: 10 }, templateImage: '/images/products/button-shirt.svg', sortOrder: 3 },
+    ],
+    variants: apparelVariants('OXF', [['#f4f4f2', 'White'], ['#b8cadb', 'Sky'], ['#24405f', 'Navy'], ['#cfc9bd', 'Stone']], SIZES),
+    model: {
+      modelUrl: '/models/button-shirt.glb',
+      zones: { front: 'overlay', back: 'overlay', left_sleeve: 'overlay', right_sleeve: 'overlay' },
+      colorMeshes: [],
+      cameraDistance: 2.4,
+      views: { default: { azimuth: 22, polar: 80 } },
+    },
+  },
+  {
+    slug: 'kraft-gift-box',
+    name: 'Kraft Gift Box',
+    categorySlug: 'accessories',
+    description:
+      'Rigid kraft mailer box for retail and subscription packaging. Print the lid, the front face, or both.',
+    basePrice: 12.99,
+    featured: false,
+    image: '/images/products/giftbox.svg',
+    tags: ['new'],
+    metadata: { material: 'E-flute kraft board', weightGrams: 210, shippingClass: 'standard' },
+    printMethods: ['uv_print', 'screen_print'],
+    areas: [
+      { key: 'front', name: 'Front', width: 520, height: 300, safeArea: { x: 47, y: 27, width: 426, height: 246 }, physicalWidthIn: 9, physicalHeightIn: 5.2, mockup: { left: 18, top: 39, width: 28, height: 31, rotate: 21 }, templateImage: '/images/products/giftbox.svg', sortOrder: 0 },
+      { key: 'top', name: 'Lid', width: 520, height: 420, safeArea: { x: 47, y: 38, width: 426, height: 344 }, physicalWidthIn: 9, physicalHeightIn: 7.3, mockup: { left: 27, top: 15, width: 46, height: 22 }, templateImage: '/images/products/giftbox.svg', sortOrder: 1 },
+    ],
+    variants: [
+      { name: 'Kraft', color: '#b8916a', colorName: 'Kraft', sku: 'BOX-KRF', stock: 400 },
+      { name: 'White', color: '#f2f1ee', colorName: 'White', sku: 'BOX-WHT', stock: 320 },
+      { name: 'Black', color: '#26282c', colorName: 'Black', sku: 'BOX-BLK', stock: 180 },
+    ],
+    model: {
+      modelUrl: '/models/gift-box.glb',
+      zones: { front: 'overlay', top: 'overlay' },
+      colorMeshes: [],
+      lighting: 'product',
+      cameraDistance: 2.2,
+      views: { default: { azimuth: 32, polar: 62 } },
+    },
+  },
+  {
     slug: 'classic-cotton-tshirt',
     name: 'Classic Cotton T-Shirt',
     categorySlug: 'apparel',
@@ -221,54 +348,12 @@ const PRODUCTS: ProductSeed[] = [
     ],
     variants: apparelVariants('TSH', APPAREL_COLORS, SIZES),
     model: {
-      modelUrl: '/models/tshirt.glb',
+      modelUrl: '/models/male_basic_t-shirt.glb',
       zones: { front: 'overlay', back: 'overlay', left_sleeve: 'overlay', right_sleeve: 'overlay' },
       colorMeshes: ['body', 'collar', 'sleeve_left', 'sleeve_right', 'cuff_left', 'cuff_right'],
       partLabels: { body: 'Front', collar: 'Collar', sleeve_left: 'Left sleeve', sleeve_right: 'Right sleeve' },
       cameraDistance: 2.4,
       views: { default: { azimuth: 22, polar: 80 } },
-    },
-  },
-  {
-    slug: 'pro-team-jersey',
-    name: 'Pro Team Jersey',
-    categorySlug: 'apparel',
-    description:
-      'A fully sublimated athletic jersey with a mock-neck collar and printed shoulder panels. Add your team name, number and crest — the artwork wraps the real 3D garment.',
-    basePrice: 39.99,
-    featured: true,
-    image: '/images/products/jersey.svg',
-    tags: ['premium', 'new', 'featured'],
-    metadata: { material: 'Performance polyester, full sublimation', careInstructions: 'Machine wash cold, hang dry', weightGrams: 170, shippingClass: 'standard' },
-    printMethods: ['sublimation'],
-    areas: [
-      { key: 'front', name: 'Front', width: 450, height: 550, safeArea: { x: 45, y: 55, width: 360, height: 440 }, physicalWidthIn: 12, physicalHeightIn: 14.7, mockup: { left: 30, top: 24, width: 40, height: 50 }, templateImage: '/images/products/jersey.svg', sortOrder: 0 },
-      { key: 'back', name: 'Back', width: 450, height: 550, safeArea: { x: 45, y: 55, width: 360, height: 440 }, physicalWidthIn: 12, physicalHeightIn: 14.7, mockup: { left: 30, top: 22, width: 40, height: 52 }, templateImage: '/images/products/jersey-back.svg', sortOrder: 1 },
-    ],
-    variants: ['XS', ...SIZES].map((size) => ({
-      name: `Team Blue / ${size}`,
-      color: '#262d6e',
-      colorName: 'Team Blue',
-      size,
-      sku: `JRS-BLU-${size}`,
-      stock: 150,
-    })),
-    model: {
-      modelUrl: '/models/jersey.glb',
-      zones: { front: 'overlay', back: 'overlay' },
-      colorMeshes: [],
-      baseTextures: {
-        body: '/textures/jersey-body.svg',
-        collar: '/textures/jersey-body.svg',
-        collar_rim: '/textures/jersey-body.svg',
-        cuff_left: '/textures/jersey-body.svg',
-        cuff_right: '/textures/jersey-body.svg',
-        sleeve_left: '/textures/jersey-sleeve.svg',
-        sleeve_right: '/textures/jersey-sleeve.svg',
-      },
-      partLabels: { body: 'Front', collar: 'Collar', sleeve_left: 'Left sleeve', sleeve_right: 'Right sleeve' },
-      cameraDistance: 2.4,
-      views: { default: { azimuth: 20, polar: 80 } },
     },
   },
   {
@@ -292,7 +377,7 @@ const PRODUCTS: ProductSeed[] = [
     ],
     variants: apparelVariants('HOD', [['#23252a', 'Black'], ['#4b5563', 'Charcoal'], ['#24405f', 'Navy'], ['#6b2130', 'Maroon']], SIZES),
     model: {
-      modelUrl: '/models/hoodie.glb',
+      modelUrl: '/models/hoodie-3d.glb',
       zones: { front: 'overlay', back: 'overlay', left_sleeve: 'overlay', right_sleeve: 'overlay', pocket: 'overlay' },
       colorMeshes: ['body', 'hood', 'pocket', 'sleeve_left', 'sleeve_right', 'cuff_left', 'cuff_right'],
       partLabels: { body: 'Front', hood: 'Hood', pocket: 'Pocket', sleeve_left: 'Left sleeve', sleeve_right: 'Right sleeve' },
@@ -318,7 +403,7 @@ const PRODUCTS: ProductSeed[] = [
     ],
     variants: apparelVariants('JOG', [['#23252a', 'Black'], ['#4b5563', 'Charcoal'], ['#24405f', 'Navy']], SIZES),
     model: {
-      modelUrl: '/models/joggers.glb',
+      modelUrl: '/models/joggers-3d.glb',
       zones: { left_leg: 'overlay', right_leg: 'overlay' },
       colorMeshes: ['hips', 'waistband', 'leg_left_mesh', 'leg_right_mesh'],
       partLabels: { leg_left_mesh: 'Left leg', leg_right_mesh: 'Right leg', waistband: 'Waistband' },
@@ -347,7 +432,7 @@ const PRODUCTS: ProductSeed[] = [
       { name: 'White / 15oz', color: '#f6f5f2', colorName: 'White', size: '15oz', sku: 'MUG-WHT-15', price: 12.99, stock: 250 },
     ],
     model: {
-      modelUrl: '/models/mug.glb',
+      modelUrl: '/models/mug-3d.glb',
       zones: { wrap: 'surface' },
       colorMeshes: ['body', 'inner', 'base', 'handle'],
       partLabels: { body: 'Wrap', handle: 'Handle', inner: 'Interior' },
@@ -361,7 +446,7 @@ const PRODUCTS: ProductSeed[] = [
     name: 'Steel Water Bottle',
     categorySlug: 'drinkware',
     description:
-      'Double-walled 750ml stainless bottle that keeps drinks cold for 24 hours. Front and back label zones curve with the body.',
+      'Double-walled 750ml stainless bottle that keeps drinks cold for 24 hours. One continuous wrap zone follows the whole body.',
     basePrice: 19.99,
     featured: true,
     image: '/images/products/bottle.svg',
@@ -369,8 +454,7 @@ const PRODUCTS: ProductSeed[] = [
     metadata: { material: '18/8 stainless steel', careInstructions: 'Hand wash', weightGrams: 380, shippingClass: 'standard' },
     printMethods: ['uv_print', 'laser_engraving'],
     areas: [
-      { key: 'front', name: 'Front', width: 300, height: 420, safeArea: { x: 25, y: 30, width: 250, height: 360 }, physicalWidthIn: 3.2, physicalHeightIn: 4.5, mockup: { left: 36, top: 38, width: 28, height: 38 }, templateImage: '/images/products/bottle.svg', sortOrder: 0 },
-      { key: 'back', name: 'Back', width: 300, height: 420, safeArea: { x: 25, y: 30, width: 250, height: 360 }, physicalWidthIn: 3.2, physicalHeightIn: 4.5, mockup: { left: 36, top: 38, width: 28, height: 38 }, templateImage: '/images/products/bottle.svg', sortOrder: 1 },
+      { key: 'wrap', name: 'Wrap', width: 760, height: 420, safeArea: { x: 40, y: 30, width: 680, height: 360 }, physicalWidthIn: 8, physicalHeightIn: 4.5, mockup: { left: 26, top: 34, width: 48, height: 44 }, templateImage: '/images/products/bottle.svg', sortOrder: 0 },
     ],
     variants: [
       { name: 'Steel', color: '#c3c8cf', colorName: 'Steel', sku: 'BTL-STL-750', stock: 300 },
@@ -378,8 +462,8 @@ const PRODUCTS: ProductSeed[] = [
       { name: 'Forest', color: '#1d5c40', colorName: 'Forest', sku: 'BTL-GRN-750', stock: 150 },
     ],
     model: {
-      modelUrl: '/models/bottle.glb',
-      zones: { front: 'surface', back: 'surface' },
+      modelUrl: '/models/bottle-3d.glb',
+      zones: { wrap: 'surface' },
       colorMeshes: ['body'],
       materials: { body: 'brushed_metal' },
       partLabels: { body: 'Body', cap: 'Cap' },
@@ -408,42 +492,13 @@ const PRODUCTS: ProductSeed[] = [
       { name: 'Sage', color: '#8ba888', colorName: 'Sage', sku: 'TMB-SGE', stock: 140 },
     ],
     model: {
-      modelUrl: '/models/tumbler.glb',
+      modelUrl: '/models/tumbler-3d.glb',
       zones: { wrap: 'surface' },
       colorMeshes: ['body'],
       materials: { body: 'stainless_steel' },
       partLabels: { body: 'Wrap', lid: 'Lid' },
       lighting: 'product',
       cameraDistance: 2.3,
-    },
-  },
-  {
-    slug: 'nonstick-frying-pan',
-    name: 'Non-Stick Frying Pan',
-    categorySlug: 'kitchen-cookware',
-    description:
-      'A 24cm ceramic-coated pan with a customizable base — a favorite novelty gift that shows your art on the rack.',
-    basePrice: 24.99,
-    featured: false,
-    image: '/images/products/pan.svg',
-    tags: ['customizable'],
-    metadata: { material: 'Aluminium, ceramic coating', weightGrams: 820, shippingClass: 'bulky' },
-    printMethods: ['uv_print'],
-    areas: [
-      { key: 'base', name: 'Base', width: 500, height: 500, safeArea: { x: 60, y: 60, width: 380, height: 380 }, physicalWidthIn: 8, physicalHeightIn: 8, mockup: { left: 26, top: 26, width: 48, height: 48 }, templateImage: '/images/products/pan.svg', sortOrder: 0 },
-    ],
-    variants: [
-      { name: 'Black / 24cm', color: '#26282c', colorName: 'Black', size: '24cm', sku: 'PAN-BLK-24', stock: 120 },
-      { name: 'Copper / 24cm', color: '#a4682f', colorName: 'Copper', size: '24cm', sku: 'PAN-COP-24', price: 29.99, stock: 80 },
-    ],
-    model: {
-      modelUrl: '/models/pan.glb',
-      zones: { base: 'surface' },
-      colorMeshes: ['body'],
-      materials: { body: 'metal' },
-      partLabels: { body: 'Pan', handle: 'Handle' },
-      cameraDistance: 2.2,
-      views: { default: { azimuth: 12, polar: 128, zoom: 1 }, base: { azimuth: 0, polar: 155, zoom: 0.95 } },
     },
   },
   {
@@ -466,41 +521,13 @@ const PRODUCTS: ProductSeed[] = [
       { name: 'Stone', color: '#cfc9bd', colorName: 'Stone', sku: 'PLT-STN', stock: 160 },
     ],
     model: {
-      modelUrl: '/models/plate.glb',
+      modelUrl: '/models/plate-3d.glb',
       zones: { center: 'surface' },
       colorMeshes: ['body'],
       materials: { body: 'ceramic' },
       lighting: 'soft',
       cameraDistance: 2.1,
       views: { default: { azimuth: 8, polar: 38, zoom: 1 } },
-    },
-  },
-  {
-    slug: 'ceramic-bowl',
-    name: 'Ceramic Bowl',
-    categorySlug: 'kitchen-cookware',
-    description: 'A generous glazed bowl with a wrap-around band print zone on the outer wall.',
-    basePrice: 15.99,
-    featured: false,
-    image: '/images/products/bowl.svg',
-    tags: ['new'],
-    metadata: { material: 'Glazed ceramic', weightGrams: 520, shippingClass: 'fragile' },
-    printMethods: ['sublimation', 'uv_print'],
-    areas: [
-      { key: 'band', name: 'Outer Band', width: 720, height: 300, safeArea: { x: 40, y: 25, width: 640, height: 250 }, physicalWidthIn: 8, physicalHeightIn: 3.3, mockup: { left: 22, top: 34, width: 56, height: 38 }, templateImage: '/images/products/bowl.svg', sortOrder: 0 },
-    ],
-    variants: [
-      { name: 'White', color: '#f6f5f2', colorName: 'White', sku: 'BWL-WHT', stock: 240 },
-      { name: 'Indigo', color: '#33507c', colorName: 'Indigo', sku: 'BWL-IND', stock: 120 },
-    ],
-    model: {
-      modelUrl: '/models/bowl.glb',
-      zones: { band: 'surface' },
-      colorMeshes: ['body'],
-      materials: { body: 'ceramic' },
-      lighting: 'soft',
-      cameraDistance: 2.1,
-      views: { default: { azimuth: 18, polar: 62 } },
     },
   },
   {
@@ -524,152 +551,12 @@ const PRODUCTS: ProductSeed[] = [
       { name: 'Khaki', color: '#a89464', colorName: 'Khaki', sku: 'CAP-KHK', stock: 90 },
     ],
     model: {
-      modelUrl: '/models/cap.glb',
+      modelUrl: '/models/cap-3d.glb',
       zones: { front: 'overlay' },
       colorMeshes: ['dome', 'visor'],
       partLabels: { dome: 'Crown', visor: 'Visor' },
       cameraDistance: 2.0,
       views: { default: { azimuth: 16, polar: 68 } },
-    },
-  },
-  {
-    slug: 'canvas-tote-bag',
-    name: 'Canvas Tote Bag',
-    categorySlug: 'accessories',
-    description: 'A sturdy 12oz natural canvas tote with reinforced handles. Print both sides.',
-    basePrice: 12.99,
-    featured: true,
-    image: '/images/products/tote.svg',
-    tags: ['eco', 'best_seller'],
-    metadata: { material: '12oz cotton canvas', weightGrams: 180, shippingClass: 'standard' },
-    printMethods: ['dtg', 'screen_print'],
-    areas: [
-      { key: 'front', name: 'Front', width: 400, height: 420, safeArea: { x: 35, y: 35, width: 330, height: 350 }, physicalWidthIn: 11, physicalHeightIn: 11.5, mockup: { left: 28, top: 36, width: 44, height: 46 }, templateImage: '/images/products/tote.svg', sortOrder: 0 },
-      { key: 'back', name: 'Back', width: 400, height: 420, safeArea: { x: 35, y: 35, width: 330, height: 350 }, physicalWidthIn: 11, physicalHeightIn: 11.5, mockup: { left: 28, top: 36, width: 44, height: 46 }, templateImage: '/images/products/tote.svg', sortOrder: 1 },
-    ],
-    variants: [
-      { name: 'Natural', color: '#e6dcc4', colorName: 'Natural', sku: 'TOTE-NAT', stock: 400 },
-      { name: 'Black', color: '#26282c', colorName: 'Black', sku: 'TOTE-BLK', stock: 250 },
-    ],
-    model: {
-      modelUrl: '/models/tote.glb',
-      zones: { front: 'overlay', back: 'overlay' },
-      colorMeshes: ['body', 'bottom'],
-      materials: { body: 'canvas' },
-      partLabels: { body: 'Bag', handle_l: 'Handles', handle_r: 'Handles' },
-      cameraDistance: 2.3,
-    },
-  },
-  {
-    slug: 'slim-phone-case',
-    name: 'Slim Phone Case',
-    categorySlug: 'tech-home',
-    description: 'Impact-resistant slim case with edge-to-edge printing on the back plate.',
-    basePrice: 16.99,
-    featured: false,
-    image: '/images/products/phonecase.svg',
-    tags: ['popular'],
-    metadata: { material: 'TPU + polycarbonate', weightGrams: 40, shippingClass: 'standard' },
-    printMethods: ['uv_print', 'sublimation'],
-    areas: [
-      { key: 'back', name: 'Back', width: 300, height: 600, safeArea: { x: 20, y: 20, width: 260, height: 560 }, physicalWidthIn: 3, physicalHeightIn: 6, mockup: { left: 33, top: 12, width: 34, height: 76 }, templateImage: '/images/products/phonecase.svg', sortOrder: 0 },
-    ],
-    variants: [
-      { name: 'iPhone 15', size: 'iPhone 15', color: '#26282c', colorName: 'Black', sku: 'CASE-IP15', stock: 300 },
-      { name: 'iPhone 15 Pro', size: 'iPhone 15 Pro', color: '#26282c', colorName: 'Black', sku: 'CASE-IP15P', stock: 300 },
-      { name: 'Galaxy S24', size: 'Galaxy S24', color: '#26282c', colorName: 'Black', sku: 'CASE-GS24', stock: 220 },
-    ],
-    model: {
-      modelUrl: '/models/phonecase.glb',
-      zones: { back: 'surface' },
-      colorMeshes: ['body', 'backplate'],
-      materials: { body: 'plastic_matte' },
-      cameraDistance: 2.0,
-      views: { default: { azimuth: 205, polar: 82 }, front: { azimuth: 180, polar: 82 }, back: { azimuth: 0, polar: 82 } },
-    },
-  },
-  {
-    slug: 'throw-pillow',
-    name: 'Throw Pillow',
-    categorySlug: 'home-living',
-    description:
-      'A plush 45×45cm cushion with a full-front print zone that follows the fabric curve. Includes the insert.',
-    basePrice: 18.99,
-    featured: true,
-    image: '/images/products/pillow.svg',
-    tags: ['new', 'featured'],
-    metadata: { material: 'Soft-touch polyester cover', careInstructions: 'Removable cover, machine wash', weightGrams: 420, shippingClass: 'standard' },
-    printMethods: ['sublimation'],
-    areas: [
-      { key: 'front', name: 'Front', width: 520, height: 520, safeArea: { x: 45, y: 45, width: 430, height: 430 }, physicalWidthIn: 16, physicalHeightIn: 16, mockup: { left: 25, top: 25, width: 50, height: 50 }, templateImage: '/images/products/pillow.svg', sortOrder: 0 },
-    ],
-    variants: [
-      { name: 'White', color: '#f3f2ef', colorName: 'White', sku: 'PIL-WHT', stock: 260 },
-      { name: 'Sand', color: '#d9cdb4', colorName: 'Sand', sku: 'PIL-SND', stock: 140 },
-      { name: 'Slate', color: '#5a6472', colorName: 'Slate', sku: 'PIL-SLT', stock: 120 },
-    ],
-    model: {
-      modelUrl: '/models/pillow.glb',
-      zones: { front: 'overlay' },
-      colorMeshes: ['body'],
-      materials: { body: 'polyester' },
-      lighting: 'soft',
-      cameraDistance: 2.2,
-    },
-  },
-  {
-    slug: 'desk-mouse-pad',
-    name: 'Desk Mouse Pad',
-    categorySlug: 'tech-home',
-    description: 'A smooth-glide 30×24cm pad with a non-slip rubber base and edge-to-edge top print.',
-    basePrice: 11.99,
-    featured: false,
-    image: '/images/products/mousepad.svg',
-    tags: ['customizable'],
-    metadata: { material: 'Polyester top, natural rubber base', weightGrams: 160, shippingClass: 'standard' },
-    printMethods: ['sublimation'],
-    areas: [
-      { key: 'top', name: 'Top', width: 600, height: 480, safeArea: { x: 40, y: 40, width: 520, height: 400 }, physicalWidthIn: 11.8, physicalHeightIn: 9.4, mockup: { left: 15, top: 22, width: 70, height: 56 }, templateImage: '/images/products/mousepad.svg', sortOrder: 0 },
-    ],
-    variants: [{ name: 'Standard', color: '#26282c', colorName: 'Black base', sku: 'MPAD-STD', stock: 500 }],
-    model: {
-      modelUrl: '/models/mousepad.glb',
-      zones: { top: 'surface' },
-      colorMeshes: ['body', 'top', 'bottom'],
-      materials: { body: 'rubber' },
-      lighting: 'soft',
-      cameraDistance: 2.0,
-      views: { default: { azimuth: 10, polar: 42 } },
-    },
-  },
-  {
-    slug: 'hardcover-notebook',
-    name: 'Hardcover Notebook',
-    categorySlug: 'stationery',
-    description:
-      'An A5 hardcover journal with 192 lined pages, an elastic band, and a printable front cover.',
-    basePrice: 14.49,
-    featured: false,
-    image: '/images/products/notebook.svg',
-    tags: ['premium', 'new'],
-    metadata: { material: 'PU leather cover, 100gsm paper', weightGrams: 320, shippingClass: 'standard' },
-    printMethods: ['uv_print', 'laser_engraving'],
-    areas: [
-      { key: 'front', name: 'Front Cover', width: 420, height: 600, safeArea: { x: 40, y: 40, width: 340, height: 520 }, physicalWidthIn: 5.8, physicalHeightIn: 8.3, mockup: { left: 26, top: 14, width: 48, height: 72 }, templateImage: '/images/products/notebook.svg', sortOrder: 0 },
-    ],
-    variants: [
-      { name: 'Black', color: '#2b2b30', colorName: 'Black', sku: 'NB-BLK', stock: 320 },
-      { name: 'Tan', color: '#a5713d', colorName: 'Tan', sku: 'NB-TAN', stock: 180 },
-      { name: 'Forest', color: '#2c4a3a', colorName: 'Forest', sku: 'NB-FOR', stock: 110 },
-    ],
-    model: {
-      modelUrl: '/models/notebook.glb',
-      zones: { front: 'surface' },
-      colorMeshes: ['front_cover', 'back_cover', 'spine'],
-      materials: { front_cover: 'leather', back_cover: 'leather', spine: 'leather' },
-      partLabels: { front_cover: 'Front cover', spine: 'Spine' },
-      cameraDistance: 2.1,
-      views: { default: { azimuth: 18, polar: 64 } },
     },
   },
 ];

@@ -4,7 +4,8 @@ import path from 'node:path';
 import { validateModelBuffer } from '../src/modules/models/modelValidation.service';
 
 /**
- * The production GLBs are authored on the client side (frontend/public/models).
+ * The production GLBs are rigged into frontend/public/models by the frontend's
+ * auto-rigger (tools/rig-all.mjs).
  * They are present in the monorepo and in a full checkout, but not when the API
  * is checked out on its own — so the two asset-backed cases skip instead of
  * failing. Point CPD_MODELS_DIR at a frontend checkout to run them anywhere.
@@ -12,11 +13,12 @@ import { validateModelBuffer } from '../src/modules/models/modelValidation.servi
 const modelsDir = process.env.CPD_MODELS_DIR
   ? path.resolve(process.env.CPD_MODELS_DIR)
   : path.resolve(__dirname, '../../frontend/public/models');
-const hasModels = fs.existsSync(path.join(modelsDir, 'tshirt.glb'));
+const hasModels = fs.existsSync(path.join(modelsDir, 'male_basic_t-shirt.glb'));
 
 describe('3D asset ingestion validation', () => {
   it.skipIf(!hasModels)('validates the generated production GLBs with high quality scores', () => {
-    for (const name of ['tshirt', 'mug', 'bottle', 'pillow', 'notebook']) {
+    // One per rigging mode: planar panels, a wrap, a top face and a low-poly box.
+    for (const name of ['male_basic_t-shirt', 'hoodie-3d', 'mug-3d', 'plate-3d', 'gift-box']) {
       const report = validateModelBuffer(fs.readFileSync(path.join(modelsDir, `${name}.glb`)));
       expect(report.valid, name).toBe(true);
       expect(report.score, name).toBeGreaterThanOrEqual(80);
@@ -27,7 +29,7 @@ describe('3D asset ingestion validation', () => {
   });
 
   it.skipIf(!hasModels)('detects the zone mesh contract', () => {
-    const report = validateModelBuffer(fs.readFileSync(path.join(modelsDir, 'tshirt.glb')));
+    const report = validateModelBuffer(fs.readFileSync(path.join(modelsDir, 'male_basic_t-shirt.glb')));
     expect(report.stats.zoneMeshes).toEqual(
       expect.arrayContaining(['zone_front', 'zone_back', 'zone_left_sleeve', 'zone_right_sleeve']),
     );

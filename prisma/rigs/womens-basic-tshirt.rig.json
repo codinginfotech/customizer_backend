@@ -1,0 +1,64 @@
+{
+  "transform": {
+    "rotation": [
+      0,
+      90,
+      0
+    ],
+    "scale": 0.01759,
+    "autoCenter": true
+  },
+  "size": [
+    0.886,
+    1.15,
+    0.551
+  ],
+  "meshBindings": [
+    {
+      "mesh": "zone_front",
+      "areaKey": "front",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_back",
+      "areaKey": "back",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_left_sleeve",
+      "areaKey": "left_sleeve",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_right_sleeve",
+      "areaKey": "right_sleeve",
+      "mode": "overlay"
+    }
+  ],
+  "colorMeshes": [
+    "Design_mat_0_Inside_Mat_0_0",
+    "Design_mat_0_Outside_Mat_1_0",
+    "Design_mat_1_Inside_Mat_0_0",
+    "Design_mat_1_Outside_Mat_1_0",
+    "Design_mat_2_Inside_Mat_0_0",
+    "Design_mat_2_Outside_Mat_1_0",
+    "Design_mat_3_Inside_Mat_0_0",
+    "Design_mat_3_Outside_Mat_1_0",
+    "Design_mat_4_Inside_Mat_0_0",
+    "Design_mat_4_Outside_Mat_1_0"
+  ],
+  "materials": {
+    "Design_mat_0_Inside_Mat_0_0": "cotton",
+    "Design_mat_0_Outside_Mat_1_0": "cotton",
+    "Design_mat_1_Inside_Mat_0_0": "cotton",
+    "Design_mat_1_Outside_Mat_1_0": "cotton",
+    "Design_mat_2_Inside_Mat_0_0": "cotton",
+    "Design_mat_2_Outside_Mat_1_0": "cotton",
+    "Design_mat_3_Inside_Mat_0_0": "cotton",
+    "Design_mat_3_Outside_Mat_1_0": "cotton",
+    "Design_mat_4_Inside_Mat_0_0": "cotton",
+    "Design_mat_4_Outside_Mat_1_0": "cotton"
+  },
+  "preserveMaterials": true,
+  "decalZones": {}
+}

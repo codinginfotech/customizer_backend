@@ -144,6 +144,43 @@ export const cameraViewSchema = z.object({
 });
 export type CameraView = z.infer<typeof cameraViewSchema>;
 
+/**
+ * Rigid transform applied to an imported model whose axes or origin do not
+ * match the contract — Z-up DCC exports, off-origin scans, wrong unit scale.
+ * Applied before framing, so the camera rig still auto-fits.
+ */
+export const modelTransformSchema = z.object({
+  /** Euler XYZ in DEGREES. A Z-up export needs [-90, 0, 0]. */
+  rotation: z.tuple([z.number(), z.number(), z.number()]).default([0, 0, 0]),
+  scale: z.number().positive().max(1000).default(1),
+  /** Recentre the bounding box on the origin after rotating. */
+  autoCenter: z.boolean().default(true),
+});
+export type ModelTransform = z.infer<typeof modelTransformSchema>;
+
+/**
+ * A print area projected onto arbitrary geometry as a decal, for models that
+ * ship without authored `zone_<areaKey>` meshes (stock or scanned assets).
+ * Coordinates are in the model's local space AFTER `transform` is applied.
+ */
+export const decalZoneSchema = z.object({
+  /** Centre of the projector box. */
+  position: z.tuple([z.number(), z.number(), z.number()]),
+  /** Projector orientation, Euler XYZ in DEGREES. [0,0,0] projects along -Z (front). */
+  rotation: z.tuple([z.number(), z.number(), z.number()]).default([0, 0, 0]),
+  /** Projector box size [width, height, depth]; depth must span the surface. */
+  size: z.tuple([z.number().positive(), z.number().positive(), z.number().positive()]),
+  /**
+   * Aim the projector at a point instead of by Euler angles. Far easier to
+   * get right on a curved part: put the position just off the surface and the
+   * target at the part centre. Overrides `rotation` when present.
+   */
+  lookAt: z.tuple([z.number(), z.number(), z.number()]).optional(),
+  /** Restrict projection to one mesh; defaults to every mesh in the model. */
+  targetMesh: z.string().max(100).optional(),
+});
+export type DecalZone = z.infer<typeof decalZoneSchema>;
+
 export const lightingPresetSchema = z.enum([
   'studio',
   'soft',
@@ -183,6 +220,20 @@ export const modelConfigurationSchema = z.object({
   partLabels: z.record(z.string().max(100), z.string().max(80)).default({}),
   /** Named camera views; missing names fall back to computed defaults. */
   cameraViews: z.record(z.string().max(40), cameraViewSchema).default({}),
+  /**
+   * Print areas projected as decals onto arbitrary geometry, keyed by areaKey.
+   * Used when the asset has no `zone_<areaKey>` meshes; authored zone meshes
+   * always win where both exist.
+   */
+  decalZones: z.record(z.string().max(100), decalZoneSchema).default({}),
+  /** Axis/origin/scale correction for imported assets. */
+  transform: modelTransformSchema.default({ rotation: [0, 0, 0], scale: 1, autoCenter: true }),
+  /**
+   * Keep the normal / roughness / AO / metalness maps authored into the GLB
+   * instead of substituting a procedural preset. Set this for photoreal
+   * assets; the presets remain the fallback wherever a map is absent.
+   */
+  preserveMaterials: z.boolean().default(false),
   lighting: lightingPresetSchema.default('studio'),
   /** Initial camera distance multiplier. */
   cameraDistance: z.number().positive().max(20).default(2.2),

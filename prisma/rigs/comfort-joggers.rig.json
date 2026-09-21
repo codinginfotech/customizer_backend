@@ -1,0 +1,36 @@
+{
+  "transform": {
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": 1.119,
+    "autoCenter": true
+  },
+  "size": [
+    0.72,
+    1.151,
+    0.31
+  ],
+  "meshBindings": [
+    {
+      "mesh": "zone_left_leg",
+      "areaKey": "left_leg",
+      "mode": "overlay"
+    },
+    {
+      "mesh": "zone_right_leg",
+      "areaKey": "right_leg",
+      "mode": "overlay"
+    }
+  ],
+  "colorMeshes": [
+    "PAnts High ply_0_node007__0"
+  ],
+  "materials": {
+    "PAnts High ply_0_node007__0": "cotton"
+  },
+  "preserveMaterials": true,
+  "decalZones": {}
+}

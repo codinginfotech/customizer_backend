@@ -1,0 +1,31 @@
+{
+  "transform": {
+    "rotation": [
+      0,
+      90,
+      0
+    ],
+    "scale": 0.1264,
+    "autoCenter": true
+  },
+  "size": [
+    0.356,
+    1.15,
+    0.356
+  ],
+  "meshBindings": [
+    {
+      "mesh": "zone_wrap",
+      "areaKey": "wrap",
+      "mode": "overlay"
+    }
+  ],
+  "colorMeshes": [
+    "Object_2"
+  ],
+  "materials": {
+    "Object_2": "cotton"
+  },
+  "preserveMaterials": true,
+  "decalZones": {}
+}
