@@ -9,6 +9,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(4000),
   DATABASE_URL: z.string().min(1),
   CLIENT_URL: z.string().default('http://localhost:5173'),
+  // Proxy hops between the client and this process (nginx, hosting edge, …).
+  TRUST_PROXY: z.coerce.number().int().min(0).default(1),
 
   JWT_ACCESS_SECRET: z.string().min(8),
   JWT_REFRESH_SECRET: z.string().min(8),

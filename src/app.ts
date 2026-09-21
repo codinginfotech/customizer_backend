@@ -12,7 +12,9 @@ import { UPLOAD_ROOT } from './storage';
 export function createApp() {
   const app = express();
 
-  app.set('trust proxy', 1);
+  // Number of proxy hops in front of the API (see TRUST_PROXY in .env). Getting
+  // this wrong makes every client share one rate-limit bucket.
+  app.set('trust proxy', env.TRUST_PROXY);
   app.use(
     helmet({
       // Uploaded images/models are consumed by the SPA on another origin.
