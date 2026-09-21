@@ -3,8 +3,9 @@ import type { ShopifyShop } from '@prisma/client';
 import { InvalidJwtError, RequestedTokenType } from '@shopify/shopify-api';
 import { catchAsync } from '../../utils/catchAsync';
 import { ApiError } from '../../utils/apiError';
+import { env } from '../../config/env';
 import { logger } from '../../config/logger';
-import { getShopify, shopifyAppUrl } from './shopify.client';
+import { getShopify } from './shopify.client';
 import { shopService } from './shop.service';
 
 declare global {
@@ -17,13 +18,22 @@ declare global {
   }
 }
 
-/** Where the Shopify admin loads the app from (application_url). */
-export function embeddedAppPath(shopDomain: string, host?: string): string {
-  const url = shopifyAppUrl();
-  url.pathname = '/shopify/admin';
-  url.searchParams.set('shop', shopDomain);
-  if (host) url.searchParams.set('host', host);
-  return url.toString();
+/**
+ * Where to send a merchant after OAuth: the app *inside* the Shopify admin
+ * (https://admin.shopify.com/store/<store>/apps/<client id>). Redirecting to
+ * our own /shopify/admin at top level would just show the install screen
+ * again, because the page is not framed by the admin.
+ */
+export function shopifyAdminAppUrl(shopDomain: string, host?: string): string {
+  const shopify = getShopify();
+  if (host) {
+    try {
+      return shopify.auth.buildEmbeddedAppUrl(host);
+    } catch {
+      /* malformed host param — fall through to the shop-domain form */
+    }
+  }
+  return `https://${shopDomain}/admin/apps/${env.SHOPIFY_API_KEY}`;
 }
 
 function shopParam(req: Request): string {
@@ -121,6 +131,6 @@ shopifyAuthRoutes.get(
     const { session } = await shopify.auth.callback({ rawRequest: req, rawResponse: res });
     await shopService.install(session);
     const host = typeof req.query.host === 'string' ? req.query.host : undefined;
-    res.redirect(embeddedAppPath(session.shop, host));
+    res.redirect(shopifyAdminAppUrl(session.shop, host));
   }),
 );
